@@ -2174,6 +2174,40 @@ class FieldTest(unittest.TestCase):
         post.comments[1].content = 'here we go'
         post.validate()
 
+    def test_embedded_document_parent(self):
+        """Ensure that embedded documents receive a link back to their parent.
+        """
+        class Child(EmbeddedDocument):
+            name = StringField(required=True)
+
+        class Parent(EmbeddedDocument):
+            name = StringField(required=True)
+            child = EmbeddedDocumentField(Child)
+
+        parent = Parent(name='parent', child=Child(name='child'))
+
+        self.assertEquals(parent.child._parent.name, 'parent')
+
+
+    def test_embedded_document_map_parent(self):
+        """Ensure that embedded documents in MapFields receive a link back
+           to their parent.
+        """
+        class Child(EmbeddedDocument):
+            name = StringField(required=True)
+
+        class Parent(EmbeddedDocument):
+            name = StringField(required=True)
+            children = MapField(EmbeddedDocumentField(Child))
+
+        parent = Parent(name='parent', children={
+            'c1': Child(name='child1'),
+            'c2': Child(name='child2'),
+        })
+
+        self.assertEquals(parent.children['c1']._parent.name, 'parent')
+        self.assertEquals(parent.children['c2']._parent.name, 'parent')
+
 
 if __name__ == '__main__':
     unittest.main()

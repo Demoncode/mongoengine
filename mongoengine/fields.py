@@ -418,6 +418,13 @@ class EmbeddedDocumentField(BaseField):
                 self.document_type_obj = get_document(self.document_type_obj)
         return self.document_type_obj
 
+    def __get__(self, instance, owner):
+        value = super(EmbeddedDocumentField, self).__get__(instance, owner)
+        if (isinstance(value, EmbeddedDocument)
+            and value is not None and instance is not None):
+            value._parent = instance
+        return value
+
     def to_python(self, value):
         if not isinstance(value, self.document_type):
             return self.document_type._from_son(value)

@@ -1320,13 +1320,23 @@ class BaseDict(dict):
         self._mark_as_changed()
         return super(BaseDict, self).clear(*args, **kwargs)
 
+    def _get_wrapper(self, value):
+        from mongoengine import EmbeddedDocument
+        if isinstance(value, EmbeddedDocument) and self._instance is not None:
+            value._parent = self._instance
+        return value
+
+    def __getitem__(self, *args, **kwargs):
+        return self._get_wrapper(
+            super(BaseDict, self).__getitem__(*args, **kwargs))
+
     def pop(self, *args, **kwargs):
         self._mark_as_changed()
-        return super(BaseDict, self).pop(*args, **kwargs)
+        return self._get_wrapper(super(BaseDict, self).pop(*args, **kwargs))
 
     def popitem(self, *args, **kwargs):
         self._mark_as_changed()
-        return super(BaseDict, self).popitem(*args, **kwargs)
+        return self._get_wrapper(super(BaseDict, self).popitem(*args, **kwargs))
 
     def update(self, *args, **kwargs):
         self._mark_as_changed()
